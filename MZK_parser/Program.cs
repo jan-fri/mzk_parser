@@ -54,7 +54,7 @@ namespace MZK_parser
     public class Time
     {
         public string day;
-        public List<Hour> hour;
+        public List<string> hour;
     }
 
     public class Hour
@@ -320,7 +320,7 @@ namespace MZK_parser
 
                     int rowNo = 0;
 
-                    List<Hour> hours = new List<Hour>();
+                    List<string> hours = new List<string>();
 
                     
                     foreach (var row in rows)
@@ -347,10 +347,7 @@ namespace MZK_parser
                                 string hour = value.InnerText.Substring(0, 2);
                                 if (int.TryParse(hour, out minutes))
                                 {
-                                    hours.Add(new Hour
-                                    {
-                                        minutes = rowNo + minutes.ToString()
-                                    });                                        
+                                    hours.Add(rowNo + minutes.ToString());                                       
                                     nextHour = true;
                                 }
                             }
