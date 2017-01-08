@@ -267,11 +267,12 @@ namespace MZK_parser
                 List<TimeTable> tempTimeTableList = new List<TimeTable>();
                 foreach (var tt in stop["timeTableLink"])
                 {
-                    GetTimeTableHours((string)tt["link"]);
+                    List<Time> times = GetTimeTableHours((string)tt["link"]);
 
                     tempTimeTableList.Add(new TimeTable
                     {
-                        line = (string)tt["busNo"]
+                        line = (string)tt["busNo"],
+                        time = times
                     });
                 }
 
@@ -285,14 +286,17 @@ namespace MZK_parser
                 busStop.busStopDetail.Add(tempBusStopDetail);
 
                 var n = busStop.busStopDetail;
+
+                JObject busStops3 = (JObject)JToken.FromObject(busStop);
+                System.IO.File.WriteAllText("timeTable2.json", busStops3.ToString());
             }
 
             JObject busStops = (JObject)JToken.FromObject(busStop);
-            System.IO.File.WriteAllText("timeTable.json", busStops.ToString());
+            System.IO.File.WriteAllText("timeTable2.json", busStops.ToString());
 
         }
 
-        private static void GetTimeTableHours(string link2TimeTable)
+        private static List<Time> GetTimeTableHours(string link2TimeTable)
         {
             string link = "http://www.mzkb-b.internetdsl.pl/" + link2TimeTable;
             HtmlWeb htmlWeb = new HtmlWeb()
@@ -305,16 +309,27 @@ namespace MZK_parser
 
             var table = doc.DocumentNode.SelectNodes("//table").Descendants("tr");
 
+            List<Time> times = new List<Time>();
+            
             foreach (var item in table)
             {
                 if (item.InnerText.Contains("DNI ROBOCZE") || item.InnerText.Contains("SOBOTY") || item.InnerText.Contains("NIEDZIELE I ŚWIĘTA"))
                 {
+                    Time time = new Time();
                     var rows = item.ChildNodes;
 
                     int rowNo = 0;
-                    List<string> hours = new List<string>();
+
+                    List<Hour> hours = new List<Hour>();
+
+                    
                     foreach (var row in rows)
                     {
+                        if (row.InnerText == "DNI ROBOCZE" || row.InnerText == "SOBOTY" || row.InnerText == "NIEDZIELE I ŚWIĘTA")
+                        {
+                            time.day = row.InnerText;
+                        }
+
                         if (row.InnerText == "&nbsp;\n")
                         {
                             rowNo++;
@@ -332,7 +347,10 @@ namespace MZK_parser
                                 string hour = value.InnerText.Substring(0, 2);
                                 if (int.TryParse(hour, out minutes))
                                 {
-                                    hours.Add(rowNo + "."  + minutes.ToString());
+                                    hours.Add(new Hour
+                                    {
+                                        minutes = rowNo + minutes.ToString()
+                                    });                                        
                                     nextHour = true;
                                 }
                             }
@@ -343,9 +361,12 @@ namespace MZK_parser
                             nextHour = false;
                         }
                         
-                    }                 
-                }
+                    }
+                    time.hour = hours;
+                    times.Add(time);
+                }                
             }
+            return times;
         }
 
 
