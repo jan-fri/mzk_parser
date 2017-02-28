@@ -82,20 +82,128 @@ namespace MZK_parser
             List<BusLink> busLinkList = new List<BusLink>();
 
             //extract content from main page
-            // MainPageExtract(table, busLinkList);                       
+            MainPageExtract(table, busLinkList);
 
             List<BusStopLink> busStopLink = new List<BusStopLink>();
             List<string> processedLinks = new List<string>();
 
-            // ExtractLinks(busStopLink, busLinkList, htmlWeb, processedLinks);      
+            //ExtractLinks(busStopLink, busLinkList, htmlWeb, processedLinks);     
+            GetBusStopList(busStopLink, busLinkList, htmlWeb, processedLinks);
 
             GetTimeTable();
 
 
         }
+        //extracts bus stop list for each bus line number - used in graph database
+        private static void GetBusStopList(List<BusStopLink> busStopLink, List<BusLink> busLinkList, HtmlWeb htmlWeb, List<string> processedLinks)
+        {
+
+            System.IO.StreamWriter file = new System.IO.StreamWriter("graphDatabaseScript.txt");
+            List<string> processedStops = new List<string>();
+            foreach (var bLink in busLinkList)
+            {
+                if (bLink.busNumber == null)
+                    break;
+
+                string link = "http://www.mzkb-b.internetdsl.pl/" + bLink.linktoBus;
+                HtmlDocument doc = htmlWeb.Load(link);
+
+                var tab = doc.DocumentNode.SelectNodes("//table").Descendants("tr");
+
+
+                
+
+                foreach (var stop in tab)
+                {
+                    IEnumerable<HtmlNode> stoplinks = stop.Descendants("a").Where(x => x.Attributes.Contains("href"));
+                    foreach (var sLink in stoplinks)
+                    {
+                        BusStopLink tempStopLink;
+                        if (sLink.InnerText.Contains('('))
+                        {
+                            string stopName = Regex.Replace(sLink.InnerText.Replace("&nbsp;", ""), "(\\(.*\\))", "");
+
+                            string stopNo = sLink.Attributes["href"].Value.Split('_', '_')[1];
+                            string extractedStopLink = "p_" + stopNo + "_l.htm";
+
+                            tempStopLink = new BusStopLink
+                            {
+                                stopRef = sLink.InnerText.Split('(', ')')[1],
+                                stopLink = extractedStopLink,
+                                stopName = stopName
+                            };
 
 
 
+                            if (processedLinks.Contains(extractedStopLink))
+                            {
+                                break;
+                            }
+                            else
+                            {
+                                processedLinks.Add(extractedStopLink);
+                            }
+
+                            busStopLink.Add(tempStopLink);                           
+
+                        }
+                    }
+                }
+
+                processedLinks.Clear();
+
+                int index = 0;
+                List<string> nodeList = new List<string>();
+                List<string> relationList = new List<string>();
+                StringBuilder busStopList = new StringBuilder();
+                foreach (var busStop in busStopLink)
+                {
+                    bool nodeCreated = false;
+                    if (processedStops.Contains(busStop.stopRef))
+                        nodeCreated = true;
+                    else
+                        processedStops.Add(busStop.stopRef);
+
+
+
+                    if (!nodeCreated)
+                    {
+                        nodeList.Add("CREATE (b" + busStop.stopRef + ":BusStop {name:'" + busStop.stopName + "', ref:'" + busStop.stopRef + "'}");                        
+                    }
+
+                    if (index < busStopLink.Count - 1)
+                    {
+                        relationList.Add("(b" + busStop.stopRef + ")-[:RELATION {busNumber:[" + bLink.busNumber + "]}]->(b" + busStopLink[index + 1].stopRef + "),");
+                    }
+
+                    busStopList.Append(busStop.stopRef + "->");
+
+                    index++;
+                }
+
+                busStopLink.Clear();
+
+                file.WriteLine("// create nodes for stops for line " + bLink.busNumber + " route " + bLink.direction);
+                foreach (var node in nodeList)
+                {
+                    file.WriteLine(node);
+                }
+                file.WriteLine();
+                file.WriteLine("// line " + bLink.busNumber + " route " + bLink.direction + ":" + busStopList);
+                file.WriteLine("CREATE");
+                foreach (var relation in relationList)
+                {
+                    file.WriteLine(relation);
+                }
+                file.WriteLine();
+            }
+            file.Close();
+
+        }
+
+
+
+        //extracts bus line numbers, corresponding links to bus stops and route direction 
         private static void MainPageExtract(IEnumerable<HtmlNode> table, List<BusLink> busLinkList)
         {
             foreach (var item in table)
@@ -158,7 +266,9 @@ namespace MZK_parser
             JArray busLinks = (JArray)JToken.FromObject(busLinkList);
             System.IO.File.WriteAllText("buss4.json", busLinks.ToString());
         }
-        private static void ExtractLinks(List<BusStopLink> busStopLink, List<BusLink> busLinkList, HtmlWeb htmlWeb, List<string> processsedLinks)
+
+        //extracts bus stops for each bus line
+        private static void ExtractLinks(List<BusStopLink> busStopLink, List<BusLink> busLinkList, HtmlWeb htmlWeb, List<string> processedLinks)
         {
             foreach (var bLink in busLinkList)
             {
@@ -192,13 +302,13 @@ namespace MZK_parser
                                 stopName = stopName
                             };
 
-                            if (processsedLinks.Contains(extractedStopLink))
+                            if (processedLinks.Contains(extractedStopLink))
                             {
                                 break;
                             }
                             else
                             {
-                                processsedLinks.Add(extractedStopLink);
+                                processedLinks.Add(extractedStopLink);
                             }
 
                             tempStopLink.timeTableLink = new List<BusNo2Stop>(ExtractTimeTableLinks(extractedStopLink));
@@ -220,6 +330,7 @@ namespace MZK_parser
                         }
                     }
                 }
+
             }
 
             JArray stops = (JArray)JToken.FromObject(busStopLink);
@@ -287,8 +398,8 @@ namespace MZK_parser
 
                 var n = busStop.busStopDetail;
 
-                JObject busStops3 = (JObject)JToken.FromObject(busStop);
-                System.IO.File.WriteAllText("timeTable2.json", busStops3.ToString());
+                //JObject busStops3 = (JObject)JToken.FromObject(busStop);
+                //System.IO.File.WriteAllText("timeTable2.json", busStops3.ToString());
             }
 
             JObject busStops = (JObject)JToken.FromObject(busStop);
@@ -310,7 +421,7 @@ namespace MZK_parser
             var table = doc.DocumentNode.SelectNodes("//table").Descendants("tr");
 
             List<Time> times = new List<Time>();
-            
+
             foreach (var item in table)
             {
                 if (item.InnerText.Contains("DNI ROBOCZE") || item.InnerText.Contains("SOBOTY") || item.InnerText.Contains("NIEDZIELE I ŚWIĘTA"))
@@ -322,7 +433,7 @@ namespace MZK_parser
 
                     List<string> hours = new List<string>();
 
-                    
+
                     foreach (var row in rows)
                     {
                         if (row.InnerText == "DNI ROBOCZE" || row.InnerText == "SOBOTY" || row.InnerText == "NIEDZIELE I ŚWIĘTA")
@@ -347,7 +458,7 @@ namespace MZK_parser
                                 string hour = value.InnerText.Substring(0, 2);
                                 if (int.TryParse(hour, out minutes))
                                 {
-                                    hours.Add(rowNo + minutes.ToString());                                       
+                                    hours.Add(rowNo + "." + minutes.ToString());
                                     nextHour = true;
                                 }
                             }
@@ -357,11 +468,11 @@ namespace MZK_parser
                             rowNo++;
                             nextHour = false;
                         }
-                        
+
                     }
                     time.hour = hours;
                     times.Add(time);
-                }                
+                }
             }
             return times;
         }
