@@ -168,12 +168,12 @@ namespace MZK_parser
 
                     if (!nodeCreated)
                     {
-                        nodeList.Add("CREATE (b" + busStop.stopRef + ":BusStop {name:'" + busStop.stopName + "', ref:'" + busStop.stopRef + "'}");                        
+                        nodeList.Add("CREATE (b" + busStop.stopRef + ":BusStop {name:'" + busStop.stopName + "', ref:'" + busStop.stopRef + "'})");                        
                     }
 
                     if (index < busStopLink.Count - 1)
                     {
-                        relationList.Add("(b" + busStop.stopRef + ")-[:RELATION {busNumber:[" + bLink.busNumber + "]}]->(b" + busStopLink[index + 1].stopRef + "),");
+                        relationList.Add("(b" + busStop.stopRef + ")-[:RELATION {busNumber:[" + bLink.busNumber + "]}]->(b" + busStopLink[index + 1].stopRef + ")");
                     }
 
                     busStopList.Append(busStop.stopRef + "->");
@@ -191,9 +191,15 @@ namespace MZK_parser
                 file.WriteLine();
                 file.WriteLine("// line " + bLink.busNumber + " route " + bLink.direction + ":" + busStopList);
                 file.WriteLine("CREATE");
+                int ind = 1;
                 foreach (var relation in relationList)
                 {
-                    file.WriteLine(relation);
+                    if (ind < relationList.Count)
+                        file.WriteLine(relation + ",");
+                    else
+                        file.WriteLine(relation);
+
+                    ind++;
                 }
                 file.WriteLine();
             }
