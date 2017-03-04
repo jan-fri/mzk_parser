@@ -99,11 +99,10 @@ namespace MZK_parser
         {
 
             System.IO.StreamWriter file = new System.IO.StreamWriter("graphDatabaseScript.txt");
-            List<string> processedStops = new List<string>();
             foreach (var bLink in busLinkList)
             {
                 if (bLink.busNumber == null)
-                    break;
+                    continue; // break;
 
                 string link = "http://www.mzkb-b.internetdsl.pl/" + bLink.linktoBus;
                 HtmlDocument doc = htmlWeb.Load(link);
@@ -154,29 +153,27 @@ namespace MZK_parser
 
                 int index = 0;
                 List<string> nodeList = new List<string>();
-                List<string> relationList = new List<string>();
+                List<string> createRelationList = new List<string>();
+                List<string> refList = new List<string>();
                 StringBuilder busStopList = new StringBuilder();
                 foreach (var busStop in busStopLink)
                 {
-                    bool nodeCreated = false;
-                    if (processedStops.Contains(busStop.stopRef))
-                        nodeCreated = true;
-                    else
-                        processedStops.Add(busStop.stopRef);
-
-
-
-                    if (!nodeCreated)
-                    {
-                        nodeList.Add("CREATE (b" + busStop.stopRef + ":BusStop {name:'" + busStop.stopName + "', ref:'" + busStop.stopRef + "'})");                        
-                    }
+                    nodeList.Add("MERGE (b" + busStop.stopRef + ":BusStop {name:'" + busStop.stopName + "', ref:'" + busStop.stopRef + "'})");
 
                     if (index < busStopLink.Count - 1)
                     {
-                        relationList.Add("(b" + busStop.stopRef + ")-[:RELATION {busNumber:[" + bLink.busNumber + "]}]->(b" + busStopLink[index + 1].stopRef + ")");
+                        createRelationList.Add("OPTIONAL MATCH p=(b" + busStop.stopRef + ":BusStop {ref:'" + busStop.stopRef + "'})-[r:RELATION]->(b" + busStopLink[index + 1].stopRef + ":BusStop {ref:'" + busStopLink[index + 1].stopRef + "'})\n" +
+                           "FOREACH (c IN CASE WHEN p IS NULL THEN [1] ELSE [] END |" +
+                           "CREATE (b" + busStop.stopRef + ")-[r:RELATION {busNumber:" + bLink.busNumber + "}]->(b" + busStopLink[index + 1].stopRef + ")\n" +
+                           ")\n" +
+                           "FOREACH (c IN CASE WHEN p IS NOT NULL THEN [1] ELSE [] END |" +
+                           "MERGE (b" + busStop.stopRef + ")-[r:RELATION]->(b" + busStopLink[index + 1].stopRef + ") SET r.busNumber = r.busNumber + [" + bLink.busNumber + "]\n" +
+                           ")\n");
                     }
 
-                    busStopList.Append(busStop.stopRef + "->");
+                    refList.Add("b" + busStop.stopRef);
+
+                    busStopList.Append("b" + busStop.stopRef + ", ");
 
                     index++;
                 }
@@ -190,18 +187,18 @@ namespace MZK_parser
                 }
                 file.WriteLine();
                 file.WriteLine("// line " + bLink.busNumber + " route " + bLink.direction + ":" + busStopList);
-                file.WriteLine("CREATE");
-                int ind = 1;
-                foreach (var relation in relationList)
-                {
-                    if (ind < relationList.Count)
-                        file.WriteLine(relation + ",");
-                    else
-                        file.WriteLine(relation);
 
-                    ind++;
+                busStopList.Remove(busStopList.Length - 2, 2);
+
+
+                for (int i = 0; i < createRelationList.Count; i++)
+                {
+                    file.WriteLine("WITH " + busStopList);                
+                    file.WriteLine(createRelationList[i]);
                 }
+
                 file.WriteLine();
+               
             }
             file.Close();
 
