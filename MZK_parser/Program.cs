@@ -88,7 +88,7 @@ namespace MZK_parser
             List<string> processedLinks = new List<string>();
 
             //ExtractLinks(busStopLink, busLinkList, htmlWeb, processedLinks);     
-            GetBusStopList(busStopLink, busLinkList, htmlWeb, processedLinks);
+            //GetBusStopList(busStopLink, busLinkList, htmlWeb, processedLinks);
 
             GetTimeTable();
 
@@ -492,7 +492,7 @@ namespace MZK_parser
             }
 
             JObject busStops = (JObject)JToken.FromObject(busStop);
-            System.IO.File.WriteAllText("timeTable2.json", busStops.ToString());
+            System.IO.File.WriteAllText("timeTable34.json", busStops.ToString());
 
         }
 
@@ -547,7 +547,16 @@ namespace MZK_parser
                                 string hour = value.InnerText.Substring(0, 2);
                                 if (int.TryParse(hour, out minutes))
                                 {
-                                    hours.Add(rowNo + "." + minutes.ToString());
+                                    string tempRowNo = rowNo.ToString();
+                                    string tempMinutes = minutes.ToString(); 
+                                    if (tempRowNo.Length < 2)
+                                        tempRowNo = "0" + tempRowNo;
+
+                                    if (tempMinutes.Length < 2)
+                                        tempMinutes = "0" + tempMinutes;
+
+
+                                    hours.Add(tempRowNo + "." + tempMinutes);
                                     nextHour = true;
                                 }
                             }
