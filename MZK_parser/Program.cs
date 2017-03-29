@@ -87,7 +87,7 @@ namespace MZK_parser
             List<BusStopLink> busStopLink = new List<BusStopLink>();
             List<string> processedLinks = new List<string>();
 
-            //ExtractLinks(busStopLink, busLinkList, htmlWeb, processedLinks);     
+            ExtractLinks(busStopLink, busLinkList, htmlWeb, processedLinks);     
             //GetBusStopList(busStopLink, busLinkList, htmlWeb, processedLinks);
 
             GetTimeTable();
@@ -353,7 +353,7 @@ namespace MZK_parser
             }
 
             JArray busLinks = (JArray)JToken.FromObject(busLinkList);
-            System.IO.File.WriteAllText("buss4.json", busLinks.ToString());
+            System.IO.File.WriteAllText("buss5.json", busLinks.ToString());
         }
 
         //extracts bus stops for each bus line
@@ -362,7 +362,7 @@ namespace MZK_parser
             foreach (var bLink in busLinkList)
             {
                 if (bLink.busNumber == null)
-                    break;
+                    continue;
 
                 string link = "http://www.mzkb-b.internetdsl.pl/" + bLink.linktoBus;
                 HtmlDocument doc = htmlWeb.Load(link);
@@ -423,7 +423,7 @@ namespace MZK_parser
             }
 
             JArray stops = (JArray)JToken.FromObject(busStopLink);
-            System.IO.File.WriteAllText("stops7.json", stops.ToString());
+            System.IO.File.WriteAllText("stops8.json", stops.ToString());
         }
         private static List<BusNo2Stop> ExtractTimeTableLinks(string extractedStopLink)
         {
@@ -451,7 +451,7 @@ namespace MZK_parser
 
             JArray busStopArray;
 
-            using (StreamReader file = File.OpenText("stops7.json"))
+            using (StreamReader file = File.OpenText("stops8.json"))
             using (JsonTextReader reader = new JsonTextReader(file))
             {
                 busStopArray = (JArray)JToken.ReadFrom(reader);
@@ -492,7 +492,7 @@ namespace MZK_parser
             }
 
             JObject busStops = (JObject)JToken.FromObject(busStop);
-            System.IO.File.WriteAllText("timeTable34.json", busStops.ToString());
+            System.IO.File.WriteAllText("timeTable35.json", busStops.ToString());
 
         }
 
