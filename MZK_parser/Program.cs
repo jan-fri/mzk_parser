@@ -87,10 +87,10 @@ namespace MZK_parser
             List<BusStopLink> busStopLink = new List<BusStopLink>();
             List<string> processedLinks = new List<string>();
 
-            ExtractLinks(busStopLink, busLinkList, htmlWeb, processedLinks);     
-            //GetBusStopList(busStopLink, busLinkList, htmlWeb, processedLinks);
+           // ExtractLinks(busStopLink, busLinkList, htmlWeb, processedLinks);     
+            GetBusStopList(busStopLink, busLinkList, htmlWeb, processedLinks);
 
-            GetTimeTable();
+            //GetTimeTable();
 
 
         }
@@ -104,7 +104,7 @@ namespace MZK_parser
             System.IO.StreamWriter createRelationsFile = new System.IO.StreamWriter("createRelations.csv");
             System.IO.StreamWriter mergeRelationsFile = new System.IO.StreamWriter("mergeRelations.csv");
 
-            busStopsFile.WriteLine("ref,name");
+            busStopsFile.WriteLine("ref,name,city");
             createRelationsFile.WriteLine("busA,line,busB");
             mergeRelationsFile.WriteLine("busA,line,busB");
 
@@ -162,7 +162,7 @@ namespace MZK_parser
                 {
                     if (!processedStops.Contains(busStop.stopRef))
                     {
-                        busStopBuilder.Append(busStop.stopRef + "," + busStop.stopName + "\n");
+                        busStopBuilder.Append(busStop.stopRef + "," + busStop.stopName + "," + "Bielsko Biała" + "\n");
                         processedStops.Add(busStop.stopRef);
                     }
 
@@ -209,87 +209,7 @@ namespace MZK_parser
             mergeRelationsFile.Close();
         }
 
-        //private static void GetBusStopList(List<BusStopLink> busStopLink, List<BusLink> busLinkList, HtmlWeb htmlWeb, List<string> processedLinks)
-        //{
-        //    List<string> processedStops = new List<string>();
-
-        //    System.IO.StreamWriter busStopsFile = new System.IO.StreamWriter("busStops.csv");
-        //    System.IO.StreamWriter relationsFile = new System.IO.StreamWriter("relations.csv");
-
-        //    busStopsFile.WriteLine("ref,name");
-        //    relationsFile.WriteLine("busA,line,busB");
-
-        //    foreach (var bLink in busLinkList)
-        //    {
-        //        if (bLink.busNumber == null)
-        //            continue; // break;
-
-        //        string link = "http://www.mzkb-b.internetdsl.pl/" + bLink.linktoBus;
-        //        HtmlDocument doc = htmlWeb.Load(link);
-
-        //        var tab = doc.DocumentNode.SelectNodes("//table").Descendants("tr");
-
-        //        foreach (var stop in tab)
-        //        {
-        //            IEnumerable<HtmlNode> stoplinks = stop.Descendants("a").Where(x => x.Attributes.Contains("href"));
-        //            foreach (var sLink in stoplinks)
-        //            {
-        //                BusStopLink tempStopLink;
-        //                if (sLink.InnerText.Contains('('))
-        //                {
-        //                    string stopName = Regex.Replace(sLink.InnerText.Replace("&nbsp;", ""), "(\\(.*\\))", "");
-
-        //                    string stopNo = sLink.Attributes["href"].Value.Split('_', '_')[1];
-        //                    string extractedStopLink = "p_" + stopNo + "_l.htm";
-
-        //                    tempStopLink = new BusStopLink
-        //                    {
-        //                        stopRef = sLink.InnerText.Split('(', ')')[1],
-        //                        stopLink = extractedStopLink,
-        //                        stopName = stopName
-        //                    };
-
-        //                    if (processedLinks.Contains(extractedStopLink))
-        //                        break;
-        //                    else
-        //                        processedLinks.Add(extractedStopLink);
-
-        //                    busStopLink.Add(tempStopLink);
-        //                }
-        //            }
-        //        }
-
-        //        processedLinks.Clear();
-
-        //        int index = 0;
-        //        StringBuilder busStopBuilder = new StringBuilder();
-        //        StringBuilder relationsBuilder = new StringBuilder();
-
-        //        foreach (var busStop in busStopLink)
-        //        {
-        //            if (!processedStops.Contains(busStop.stopRef))
-        //            {
-        //                busStopBuilder.Append(busStop.stopRef + "," + busStop.stopName + "\n");
-        //                processedStops.Add(busStop.stopRef);
-        //            }
-
-        //            if (index < busStopLink.Count - 1)
-        //            {
-        //                relationsBuilder.Append(busStop.stopRef + "," + bLink.busNumber + "," + busStopLink[index + 1].stopRef + "\n");
-        //            }
-
-        //            index++;
-        //        }
-
-        //        busStopLink.Clear();
-
-        //        busStopsFile.WriteLine(busStopBuilder);
-        //        relationsFile.WriteLine(relationsBuilder);
-        //    }
-        //    busStopsFile.Close();
-        //    relationsFile.Close();
-        //}
-        
+ 
 
 
         //extracts bus line numbers, corresponding links to bus stops and route direction 
@@ -584,3 +504,83 @@ namespace MZK_parser
 
 
 
+//private static void GetBusStopList(List<BusStopLink> busStopLink, List<BusLink> busLinkList, HtmlWeb htmlWeb, List<string> processedLinks)
+//{
+//    List<string> processedStops = new List<string>();
+
+//    System.IO.StreamWriter busStopsFile = new System.IO.StreamWriter("busStops.csv");
+//    System.IO.StreamWriter relationsFile = new System.IO.StreamWriter("relations.csv");
+
+//    busStopsFile.WriteLine("ref,name");
+//    relationsFile.WriteLine("busA,line,busB");
+
+//    foreach (var bLink in busLinkList)
+//    {
+//        if (bLink.busNumber == null)
+//            continue; // break;
+
+//        string link = "http://www.mzkb-b.internetdsl.pl/" + bLink.linktoBus;
+//        HtmlDocument doc = htmlWeb.Load(link);
+
+//        var tab = doc.DocumentNode.SelectNodes("//table").Descendants("tr");
+
+//        foreach (var stop in tab)
+//        {
+//            IEnumerable<HtmlNode> stoplinks = stop.Descendants("a").Where(x => x.Attributes.Contains("href"));
+//            foreach (var sLink in stoplinks)
+//            {
+//                BusStopLink tempStopLink;
+//                if (sLink.InnerText.Contains('('))
+//                {
+//                    string stopName = Regex.Replace(sLink.InnerText.Replace("&nbsp;", ""), "(\\(.*\\))", "");
+
+//                    string stopNo = sLink.Attributes["href"].Value.Split('_', '_')[1];
+//                    string extractedStopLink = "p_" + stopNo + "_l.htm";
+
+//                    tempStopLink = new BusStopLink
+//                    {
+//                        stopRef = sLink.InnerText.Split('(', ')')[1],
+//                        stopLink = extractedStopLink,
+//                        stopName = stopName
+//                    };
+
+//                    if (processedLinks.Contains(extractedStopLink))
+//                        break;
+//                    else
+//                        processedLinks.Add(extractedStopLink);
+
+//                    busStopLink.Add(tempStopLink);
+//                }
+//            }
+//        }
+
+//        processedLinks.Clear();
+
+//        int index = 0;
+//        StringBuilder busStopBuilder = new StringBuilder();
+//        StringBuilder relationsBuilder = new StringBuilder();
+
+//        foreach (var busStop in busStopLink)
+//        {
+//            if (!processedStops.Contains(busStop.stopRef))
+//            {
+//                busStopBuilder.Append(busStop.stopRef + "," + busStop.stopName + "\n");
+//                processedStops.Add(busStop.stopRef);
+//            }
+
+//            if (index < busStopLink.Count - 1)
+//            {
+//                relationsBuilder.Append(busStop.stopRef + "," + bLink.busNumber + "," + busStopLink[index + 1].stopRef + "\n");
+//            }
+
+//            index++;
+//        }
+
+//        busStopLink.Clear();
+
+//        busStopsFile.WriteLine(busStopBuilder);
+//        relationsFile.WriteLine(relationsBuilder);
+//    }
+//    busStopsFile.Close();
+//    relationsFile.Close();
+//}
