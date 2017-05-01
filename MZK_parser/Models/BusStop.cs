@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MZK_parser.Models
 {
-    class BusStop
+    public class BusStop
     {
         public List<BusStopDetail> busStopDetail;
     }

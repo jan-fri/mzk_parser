@@ -6,11 +6,10 @@ using System.Threading.Tasks;
 
 namespace MZK_parser.Models
 {
-    class BusStopLink
+    public class BusLink
     {
-        public string stopName;
-        public string stopRef;
-        public string stopLink;
-        public List<BusNo2Link> timeTableLink;
+        public string busNumber;
+        public string linktoBus;
+        public string direction;
     }
 }

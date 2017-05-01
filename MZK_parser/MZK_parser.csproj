@@ -51,16 +51,25 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Models\BusLink.cs" />
-    <Compile Include="Models\BusNo2Stop.cs" />
+    <Compile Include="Classes\BusLinksExtractor.cs" />
+    <Compile Include="Classes\BusStopsExtractor.cs" />
+    <Compile Include="Classes\BusStopsParser.cs" />
+    <Compile Include="Classes\TimeTableParser.cs" />
+    <Compile Include="Interface\IBusStopsExtractor.cs" />
+    <Compile Include="Interface\ILinksExtractor.cs" />
+    <Compile Include="Interface\ITimeTableExtractor.cs" />
+    <Compile Include="Classes\MainPage.cs" />
+    <Compile Include="Models\Links\BusLink.cs" />
+    <Compile Include="Models\Links\BusNo2Link.cs" />
     <Compile Include="Models\BusStop.cs" />
     <Compile Include="Models\BusStopDetail.cs" />
-    <Compile Include="Models\BusStopLink.cs" />
-    <Compile Include="Models\Hour.cs" />
-    <Compile Include="Models\Time.cs" />
-    <Compile Include="Models\TimeTable.cs" />
+    <Compile Include="Models\Links\BusStopLink.cs" />
+    <Compile Include="Models\TimeTable\Hour.cs" />
+    <Compile Include="Models\TimeTable\Time.cs" />
+    <Compile Include="Models\TimeTable\TimeTable.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Classes\TimeTableExtractor.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

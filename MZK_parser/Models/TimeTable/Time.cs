@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace MZK_parser.Models
 {
-    class Hour
+    public class Time
     {
-        public string minutes;
+        public string day;
+        public List<string> hour;
     }
 }
